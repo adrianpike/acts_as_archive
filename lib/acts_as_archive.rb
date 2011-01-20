@@ -32,6 +32,7 @@ class ActsAsArchive
     
     def find(from)
       from = [ from ] unless from.is_a?(::Array)
+      
       (@configuration || []).select do |hash|
         if from[0].is_a?(::String)
           from.include?(hash[:from].table_name)
@@ -175,9 +176,10 @@ class ActsAsArchive
       def delete_sql_with_archive(sql, name = nil)
         @mutex ||= Mutex.new
         @mutex.synchronize do
+
           unless ActsAsArchive.disabled
             from, where = /DELETE FROM (.+)/i.match(sql)[1].split(/\s+WHERE\s+/i, 2)
-            from = from.strip.gsub(/`/, '').split(/\s*,\s*/)
+            from = from.strip.gsub(/`/, '').gsub('"','').split(/\s*,\s*/)
         
             ActsAsArchive.find(from).each do |config|
               ActsAsArchive.move(config, where)
